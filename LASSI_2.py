@@ -478,7 +478,7 @@ class _NestedRunConditions(object):
         self.QSuccess = False
         return None
     
-    def __str__(self):
+    def __str__(self) -> str:
         """
         Returns a string format for the following information:
         - Directory prefix:
@@ -496,7 +496,7 @@ class _NestedRunConditions(object):
         return "\n".join([l5, l1, l2, l3, l4])
     
     @staticmethod
-    def _mol_num_to_underscrore_str(mol_num: np.ndarray):
+    def _mol_num_to_underscrore_str(mol_num: np.ndarray) -> str:
         """
         Given a list of molecule numbers: [n1, n2, ..., nN], we produce a string where each molecule number is joined using
         an underscore '_'.
@@ -506,7 +506,8 @@ class _NestedRunConditions(object):
         return "_".join([str(a_num) for a_num in mol_num])
     
     @staticmethod
-    def gen_nested_run_conditions_with_boxes_mols_reps(_boxes: np.ndarray, _mols: np.ndarray, _reps: np.ndarray):
+    def gen_nested_run_conditions_with_boxes_mols_reps(_boxes: np.ndarray, _mols: np.ndarray, _reps: np.ndarray) -> \
+    Dict[str, Dict[str, Dict[str, Any]]]:
         """
         Given the list of boxes, the list of molecules, and the list of replicates, we generate a deeply nested
         dictionary. For every box-size, we loop over all the molecule numbers, and for every molecule, we loop over
@@ -3347,6 +3348,21 @@ class _DataWithError(object):
         new_e = pos_data.e / pos_data.y
         
         return _DataWithError(pos_data.x, new_y, new_e)
+    
+    def calc_sum(self):
+        """
+        Return the sum of the data, and the uncertainty. The uncertainty is the quadrature sum of the error.
+            SUM, SQRT(SUM(ERR**2))
+        :return: sum_value, sum_err
+        """
+
+    
+        dum_sum = np.sum(self.y)
+    
+        dum_err = np.sqrt(np.sum((self.e) ** 2.))
+    
+        return dum_sum, dum_err
+    
     
     def calc_distribution_moment_k(self, k: int = 1, normalized: bool = False):
         """
