@@ -3965,15 +3965,15 @@ class JobSubmission(object):
         return dum_run.stdout[:-1]
     
     @staticmethod
-    def read_log_for_timing(log_file: str = 'log.txt') -> float:
+    def read_log_for_timing(file_name: str = 'log.txt') -> float:
         """
         Reads the log file for the mins keyword. If the log has the keyword, that means that the LaSSI simulations
         successfully finished in that many minutes.
-            > tail -n 60 $log_file | grep mins | awk '{print $1}'
-        :param log_file: Name of the log-file. Usually just 'log.txt'
+            > tail -n 60 $file_name | grep mins | awk '{print $1}'
+        :param file_name: Name of the log-file. Usually just 'log.txt'
         :return:
         """
-        dum_comm = f'tail -n 60 {log_file} | grep  "mins"' + " | awk '{print $1}'"
+        dum_comm = f'tail -n 60 {file_name} | grep  "mins"' + " | awk '{print $1}'"
         dum_run = sproc.run(dum_comm, shell=True, capture_output=True, text=True)
         return float(dum_run.stdout[:-1])
     
