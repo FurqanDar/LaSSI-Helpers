@@ -1821,13 +1821,31 @@ class SimulationSetup(object):
         """
         thisSys = self.RunInfo[sysName]
         gathering_func = IOUtils.loop_function_over_deeply_nested_run_conditions_dict_only_successful_with_min_reps
-        timings_func   = JobSubmission.read_log_for_timing
         _tmpDict = gathering_func(nested_dict=thisSys,
                                   passed_func=JobSubmission.read_log_for_timing,
                                   file_name=file_name,
                                   min_reps=min_reps)
         convert_func = _NestedRunConditions._convert_nested_dict_to_nested_list
         return convert_func(_tmpDict)
+
+    def write_timings_for_nReps_for_sys_compressed(self, sysName: str, file_name: str, min_reps: int):
+        """
+        We collects the data for the given file_name, where we should have at least nReps successful
+        runs, and saves to a  gzip compressed file in the appropriate data directory for this system.
+        :param sysName:
+        :param file_name:
+        :param min_reps:
+        :return:
+        """
+        _save_file = self._gen_data_dir_prefix_for(sysName) + f"timings_{file_name}" + '.b'
+        _tmpDat = self._collect_timings_for_nReps_for_sys(sysName=sysName,
+                                                          file_name=file_name,
+                                                          min_reps=min_reps)
+    
+        with gzip.open(_save_file + ".gz", "wb") as sFile:
+            pickle.dump(_tmpDat, sFile)
+    
+        return None
         
     def _collect_raw_data_for_fileName_for_nReps_for_sys(self, sysName: str, file_name: str, min_reps: int) -> list:
         """
