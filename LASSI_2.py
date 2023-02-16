@@ -3363,7 +3363,6 @@ class _DataWithError(object):
     
         return dum_sum, dum_err
     
-    
     def calc_distribution_moment_k(self, k: int = 1, normalized: bool = False):
         """
         Treats the data as a distribution, and calculates the moment. Let that moment be k.
