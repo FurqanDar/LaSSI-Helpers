@@ -1084,7 +1084,7 @@ class IOUtils(object):
         Given a _NestedRunConditions object, we loop over all run conditions and perform a function on a particular file.
         This assumes that the file_name is the same in every directory, but that each run condition is in its own directory.
         This is usually the case if LaSSI simulations are run using the functions in this module.
-        Lastly, this also assumes that the function being passed takes a file_path as its argument.
+        Lastly, this also assumes that the function being passed takes a file_name as its argument.
         This function only performs the function if the run was successful, which assumes that the last value is a boolean.
         Here we only perform the function for min_reps. The use case being if repID=0 somehow failed, by the other reps
         finished successfully. So we can pass over that replicate, for that condition. This will preserve the overall
@@ -1808,6 +1808,26 @@ class SimulationSetup(object):
         print("-" * len(title_str))
         
         return None
+    
+    def _collect_timings_for_nReps_for_sys(self, sysName: str, file_name: str, min_reps: int) -> list:
+        """
+        We collect the data for the given file_name, where we should have at least nReps successful
+        runs, and return a deeply nested list of that data. The returned list should have the format
+        [perBox][perMol][perRep]
+        :param sysName:
+        :param file_name:
+        :param min_reps:
+        :return:
+        """
+        thisSys = self.RunInfo[sysName]
+        gathering_func = IOUtils.loop_function_over_deeply_nested_run_conditions_dict_only_successful_with_min_reps
+        timings_func   = JobSubmission.read_log_for_timing
+        _tmpDict = gathering_func(nested_dict=thisSys,
+                                  passed_func=JobSubmission.read_log_for_timing,
+                                  file_name=file_name,
+                                  min_reps=min_reps)
+        convert_func = _NestedRunConditions._convert_nested_dict_to_nested_list
+        return convert_func(_tmpDict)
         
     def _collect_raw_data_for_fileName_for_nReps_for_sys(self, sysName: str, file_name: str, min_reps: int) -> list:
         """
@@ -1821,11 +1841,11 @@ class SimulationSetup(object):
         """
         thisSys = self.RunInfo[sysName]
         gathering_func = IOUtils.loop_function_over_deeply_nested_run_conditions_dict_only_successful_with_min_reps
-        convert_func   = _NestedRunConditions._convert_nested_dict_to_nested_list
         _tmpDict = gathering_func(nested_dict=thisSys,
                                   passed_func=np.loadtxt,
                                   file_name=file_name,
                                   min_reps=min_reps)
+        convert_func = _NestedRunConditions._convert_nested_dict_to_nested_list
         return convert_func(_tmpDict)
         
     def write_raw_data_for_fileName_for_nReps_for_sys_compressed(self, sysName: str, file_name: str, min_reps: int):
