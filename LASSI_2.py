@@ -582,7 +582,6 @@ class _NestedRunConditions(object):
         return per_box[:]
     
     
-
 class IOUtils(object):
     """
     A collection of IO Utilities.
@@ -3274,14 +3273,12 @@ class _DataWithError(object):
             new_x = self.x
             new_y = self.y ** power
             new_e = power * (self.y ** (power - 1)) * self.e
-        elif power < 1:
+        else:
             gd_pts = (self.y != 0)
             
             new_x = self.x[gd_pts]
             new_y = self.y[gd_pts] ** power
             new_e = power * (self.y[gd_pts] ** (power - 1.)) * self.e[gd_pts]
-        # else:
-        #     raise ValueError("Exponent of 0 is non-sensical here.")
         
         return _DataWithError(new_x, new_y, np.abs(new_e))
     
@@ -3362,7 +3359,6 @@ class _DataWithError(object):
         dum_err = np.sqrt(np.sum((self.e) ** 2.))
     
         return dum_sum, dum_err
-    
     
     def calc_distribution_moment_k(self, k: int = 1, normalized: bool = False):
         """
