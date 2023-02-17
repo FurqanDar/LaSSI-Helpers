@@ -4212,5 +4212,77 @@ class JobSubmission(object):
     
         os.chdir(SimObj.CurrentDirectory)
         return None
+    
+    @staticmethod
+    def check_and_resubmit_crashed_sims(SimObj: SimulationSetup, run_name: str, seg_queue: str, crsh_queue: str,
+                                        run_it: int, print_to_screen: bool, only_show: bool):
+        """
+        Goes over all run conditions and checks for crashes, and depending on the type of crash, resubmits the simulation.
+        Returns the total number of crashed simulations. Currently, we count the following crash-types:
+         - seg-faults
+         - sanity check failure in LaSSI
+        :param SimObj:
+        :param run_name:
+        :param seg_queue:
+        :param crsh_queue:
+        :param run_it:
+        :param print_to_screen:
+        :param only_show:
+        :return: number_of_crashed_runs
+        """
+        segfault_runs = JobSubmission.get_all_segfault_runs(SimObj=SimObj, print_to_screen=print_to_screen)
+        JobSubmission.resubmit_segfaulted_runs(crashed_list=segfault_runs, SimObj=SimObj, run_it=run_it,
+                                                     run_name=f"s{run_name}",
+                                                     only_show=only_show, queue=seg_queue)
+    
+        crashed_runs = JobSubmission.get_all_crashed_runs(SimObj=SimObj, print_to_screen=print_to_screen)
+        JobSubmission.resubmit_crashed_runs(crashed_list=crashed_runs, SimObj=SimObj, run_it=run_it,
+                                                  run_name=f"c{run_name}",
+                                                  only_show=only_show, queue=crsh_queue)
+    
+        return len(segfault_runs) + len(crashed_runs)
+
+    @staticmethod
+    def periodically_check_and_resubmit_crashed_sims(SimObj: SimulationSetup, run_name: str, seg_queue: str,
+                                                     crsh_queue: str, print_to_screen: bool, only_show: bool,
+                                                     num_loops: int, crsh_wait: int, success_wait: int):
+        """
+        A convenient wrapper to loop over and periodically check for crashed runs and resubmit them. If there were crashed
+        simulations, we wait crsh_wait minutes before re-looping. If there were no crashes, we wait for success_wait minutes
+        before looping over again.
+        :param SimObj:
+        :param run_name:
+        :param seg_queue:
+        :param crsh_queue:
+        :param print_to_screen:
+        :param only_show:
+        :param num_loops:
+        :param crsh_wait:
+        :param success_wait:
+        :return:
+        """
+    
+        assert num_loops > 1, "There should be at least one loop!"
+        assert crsh_wait > 0 and success_wait > 0, "Wait times must be positive numbers!"
+        assert success_wait > crsh_wait, "Having success_wait < crsh_wait is not allowed!"
+    
+        for itID, anIter in enumerate(tqdm(range(1, num_loops + 1), ascii=True, desc=f'{"Checking For Crashes":<20}')):
+    
+            num_crsh = JobSubmission.check_and_resubmit_crashed_sims(SimObj=SimObj,
+                                                                     run_name=run_name,
+                                                                     seg_queue=seg_queue,
+                                                                     crsh_queue=crsh_queue,
+                                                                     print_to_screen=print_to_screen,
+                                                                     only_show=only_show,
+                                                                     run_it=anIter)
+        
+            if num_crsh > 0:
+                print(f'Iter: {anIter:<4} had {num_crsh:<4} crashes.')
+                time.sleep(crsh_wait * 60)
+            else:
+                print(f'Iter: {anIter:<4} had no crashes.')
+                time.sleep(success_wait * 60)
+    
+        return None
 
 
