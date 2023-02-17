@@ -19,7 +19,7 @@ import pickle
 import matplotlib.pyplot as plt
 import copy
 from tqdm.auto import tqdm
-
+import time
 
 from typing import Dict
 from typing import Any
@@ -844,6 +844,35 @@ class IOUtils(object):
                 line_w = f'{a_key:<25} {dum_vals[a_key]:}\n'
                 pFile.write(line_w)
         return None
+    
+    @staticmethod
+    def copy_file_with_postfix(file_path: str = 'param.key', postfix: str = 'old'):
+        """
+        A wrapper function to copy a file and add a postfix to the file-name. The following terminal command is run
+         > cp {file_path} {file_path}.{postfix}
+        :param file_path:
+        :param postfix:
+        :return:
+        """
+        dum_comm = f'cp {file_path} {file_path}.{postfix}'
+        dum_run = sproc.run(dum_comm, shell=True, capture_output=True, text=True)
+        return dum_run.stdout[:-1]
+    
+    @staticmethod
+    def write_keyfile_with_new_seed_from_older_keyfile(old_file_path: str, new_file_path: str, new_seed: int = 0):
+        """
+        Reads in an existing param-file and writes a new param-file with a new RNG_SEED value.
+        :param old_file_path:
+        :param new_file_path:
+        :param new_seed:
+        :return:
+        """
+        dum_key = IOUtils.read_param_file(file_name=old_file_path, verbose=False)
+        dum_key[1]['RANDOM_SEED'] = new_seed
+    
+        with open(new_file_path, "w") as keyFile:
+            for key, val in dum_key[1].items():
+                keyFile.write(f"{key:<25} {val}\n")
     
     @staticmethod
     def write_struc_file(struc_obj,
@@ -3903,6 +3932,19 @@ class JobSubmission(object):
         return dum_run.stdout[:-1]
     
     @staticmethod
+    def read_log_for_lassi_crash(log_file='log.txt'):
+        """
+        Reads the log-file in the current directory and looks for `Crashed` which signifies that something
+        went wrong and that the simulation failed a sanity check -- and that the run crashed.
+        > 'tail -n40 $log_file | grep "Crashing."
+        :param log_file:
+        :return:
+        """
+        dum_comm = f'tail -n40 {log_file} | grep "Crashing." '
+        dum_run = sproc.run(dum_comm, shell=True, capture_output=True, text=True)
+        return dum_run.stdout[:-1]
+    
+    @staticmethod
     def read_log_for_timing(log_file: str = 'log.txt') -> float:
         """
         Reads the log file for the mins keyword. If the log has the keyword, that means that the LaSSI simulations
@@ -3914,8 +3956,6 @@ class JobSubmission(object):
         dum_comm = f'tail -n 60 {log_file} | grep  "mins"' + " | awk '{print $1}'"
         dum_run = sproc.run(dum_comm, shell=True, capture_output=True, text=True)
         return float(dum_run.stdout[:-1])
-    
-    
     
     @staticmethod
     def rename_log(run_it: int = 0, log_name: str = 'log.txt'):
@@ -4066,5 +4106,111 @@ class JobSubmission(object):
             JobSubmission.rename_file(run_it=run_it, file_name=aFile)
         JobSubmission.rename_log(run_it)
         JobSubmission.rename_param(run_it)
+    
+    @staticmethod
+    def get_all_segfault_runs(SimObj: SimulationSetup, print_to_screen: bool = True):
+        """
+        Loops over all the run directories and finds runs that have seg-faulted.
+        :param SimObj:
+        :param print_to_screen:
+        :return:
+        """
+        dum_dir_list = SimObj._get_dirs_ofAll_perRep_perBox_perMol_perSys()
+        tot_dir_list = []
+        if print_to_screen:
+            for dir_id, a_dir in enumerate(dum_dir_list):
+                dum_log_text = JobSubmission.read_log_for_segfault_failure(log_file=f'{a_dir}log.txt')
+                if len(dum_log_text):
+                    this_dir = "/".join(a_dir.split("/")[-6:-1])
+                    tot_dir_list.append(this_dir)
+                    if print_to_screen:
+                        print(this_dir)
+    
+        return tot_dir_list
+
+    @staticmethod
+    def get_all_crashed_runs(SimObj: SimulationSetup, print_to_screen: bool = True):
+        """
+        Loops over all the run directories and finds runs that have crashed due to failed sanity checks.
+        :param SimObj:
+        :param print_to_screen:
+        :return:
+        """
+        dum_dir_list = SimObj._get_dirs_ofAll_perRep_perBox_perMol_perSys()
+        tot_dir_list = []
+        for dirID, a_dir in enumerate(dum_dir_list):
+            _dum_log_text = JobSubmission.read_log_for_lassi_crash(log_file=f'{a_dir}log.txt')
+            if len(_dum_log_text):
+                this_dir = "/".join(a_dir.split("/")[-6:-1])
+                tot_dir_list.append(this_dir)
+                if print_to_screen:
+                    print(this_dir)
+        return tot_dir_list
+
+    @staticmethod
+    def resubmit_segfaulted_runs(crashed_list: list, SimObj: SimulationSetup, run_it: int,
+                                 run_name: str, queue: str, only_show: bool = True):
+        """
+        For the list of runs that crashed due to seg-faults, we rename the existing log-file and resubmit the simulation. The idea
+        being that the queue being used is a new one.
+        :param crashed_list:
+        :param SimObj:
+        :param run_it:
+        :param run_name:
+        :param queue:
+        :param only_show:
+        :return:
+        """
+        dir_pre = SimObj.Sims_Path
+    
+        for dir_id, a_dir in enumerate(crashed_list):
+            if not only_show:
+                os.chdir(f"{dir_pre}{a_dir}")
+                JobSubmission.rename_log(run_it=run_it)
+        
+            print(JobSubmission.submit_job(job_name=f'{run_name}_{dir_id}_{run_it}', only_show=only_show,
+                                                 job_queue=queue))
+            time.sleep(0.1)
+    
+        os.chdir(SimObj.CurrentDirectory)
+        return None
+
+    @staticmethod
+    def resubmit_crashed_runs(crashed_list: list, SimObj: SimulationSetup, run_it: int,
+                              run_name: str, queue: str, only_show: bool = True):
+        """
+        For the list of runs that crashed due to failed sanity checks, we:
+            - save old param file
+            - write new param file with the RNG_SEED = 0
+            - rename the existing log file
+            - resubmit the job
+         rename the logs and resubmit the simulation. The idea
+        being that the queue being used is a new one.
+        :param crashed_list:
+        :param SimObj:
+        :param run_it:
+        :param run_name:
+        :param queue:
+        :param only_show:
+        :return:
+        """
+        dir_pre = SimObj.Sims_Path
+    
+        for dir_id, a_dir in enumerate(crashed_list):
+            if not only_show:
+                this_param = f'{a_dir}/param.key'
+                IOUtils.copy_file_with_postfix(file_path=this_param, postfix='old')
+                IOUtils.write_keyfile_with_new_seed_from_older_keyfile(old_file_path=f'{this_param}.old',
+                                                               new_file_path=f'{this_param}',
+                                                               new_seed=0)
+                os.chdir(f"{dir_pre}{a_dir}")
+                JobSubmission.rename_log(run_it=run_it)
+        
+            print(JobSubmission.submit_job(job_name=f'{run_name}_{dir_id}_{run_it}', only_show=only_show,
+                                                 job_queue=queue))
+            time.sleep(0.1)
+    
+        os.chdir(SimObj.CurrentDirectory)
+        return None
 
 
