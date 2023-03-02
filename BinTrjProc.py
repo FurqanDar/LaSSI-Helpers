@@ -5,9 +5,11 @@ import numpy as np
 import scipy as sp
 import sknetwork
 import sys
+import numba
 
 _INT_SIZE = 4
 _BYTE_ORDER = sys.byteorder
+
 
 class TrjReader(object):
     """
@@ -82,6 +84,7 @@ class TrjReader(object):
         """
         
         return f'tp.TrjReader(file_path={self._f_path}, num_atoms={self._n_atoms}, num_frames={self._n_frms})'
+
 
 class TrjExtractor(TrjReader):
     """
@@ -164,6 +167,7 @@ class TrjExtractor(TrjReader):
         """
         return self.extract_frames()[:, :, -1]
     
+
 class TrjClusterAnalysis(object):
     """
     General purpose class intended to be used with extracted frames from LaSSI simulations.
@@ -312,9 +316,68 @@ class TrjClusterAnalysis(object):
                                                                                                                           mol_size=mol_size,
                                                                                                                           mol_num=mol_num)
         return trj_conn_comps
+
+
+class _SingleChain_ConformationalUtils_wNumba:
+    """
+
+
+    """
     
+    @staticmethod
+    @numba.njit()
+    def unwrap_coordinates_w_pbc(x: np.ndarray, box_size: int):
+        """
+        Unwraps the set of coordinates w.r.t to the image of the very first coordinate. Accounts for periodic boundaries
+        This version uses numba.
+        """
+        unwrapped_x = x.copy()
+        half_box = box_size // 2
+        dx = x - x[0]
+        
+        unwrapped_x[dx <= -half_box] += box_size
+        unwrapped_x[dx >= half_box] -= box_size
+        
+        return unwrapped_x
     
+    @staticmethod
+    @numba.njit()
+    def unwrap_coordinates_3d_of_w_pbc(x: np.ndarray,
+                                       y: np.ndarray,
+                                       z: np.ndarray,
+                                       box_dims: np.ndarray):
+        """
+        Given this molecule's coordinates, we _unwrap_ the molecule. Each coordinate is unwrapped individually.
+        This version uses numba.
+        """
+        unwrap_func = _SingleChain_ConformationalUtils_wNumba.unwrap_coordinates_w_pbc
+        unwrapped_x = unwrap_func(x=x, box_size=box_dims[0])
+        unwrapped_y = unwrap_func(x=y, box_size=box_dims[1])
+        unwrapped_z = unwrap_func(x=z, box_size=box_dims[2])
+        
+        return unwrapped_x, unwrapped_y, unwrapped_z
     
+    @staticmethod
+    @numba.njit()
+    def calc_rg_squared_of_3d_coords(x: np.ndarray,
+                                     y: np.ndarray,
+                                     z: np.ndarray):
+        """
+        Calculates the gyration radius of this particular set of coordinates.
+        For each coordinate, we calculate $(r-r_m)^2$ where $r_m$ is the mean-value.
+        Then, the sum of each coordinate gives the square of the gyration radius.
+        This version uses numba.
+        """
+        
+        com_x = x.mean()
+        com_y = y.mean()
+        com_z = z.mean()
+        
+        delta_xSq = (x - com_x) ** 2.
+        delta_ySq = (y - com_y) ** 2.
+        delta_zSq = (z - com_z) ** 2.
+        
+        return delta_xSq.mean() + delta_ySq.mean() + delta_zSq.mean()
     
     
     
