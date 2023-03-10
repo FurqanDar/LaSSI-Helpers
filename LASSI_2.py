@@ -480,6 +480,26 @@ class _NestedRunConditions(object):
     
     def __str__(self) -> str:
         """
+        Pretty prints the values of the nested dict like a tree.
+            boxVal_1
+            |----  molNum_1
+            |        |-- repID_1 : repVal
+        and so on for every value.
+        :return: String representation of the values in the nested dict, similar to a tree.
+        """
+
+        strList = []
+        for boxSize, aBox in self.NestedRunConditions.items():
+            strList.append(boxSize)
+            for molNum, aMol in aBox.items():
+                strList.append("|" + "-" * 4 + f" {molNum}")
+                for repID, repVal in aMol.items():
+                    strList.append("|" + " " * 8 + "|" + "-" * 2 + f" {repID} : {repVal}")
+        return "\n".join(strList)
+        
+        
+    def __repr__(self) -> str:
+        """
         Returns a string format for the following information:
         - Directory prefix:
         - Boxes
@@ -3942,6 +3962,16 @@ class JobSubmission(object):
         dum_comm = 'ls | grep -c .dat'
         dum_run = sproc.run(dum_comm, shell=True, capture_output=True, text=True)
         return dum_run.stdout[:-1]
+    
+    @staticmethod
+    def check_for_file(file_path: str = 'log.txt') -> bool:
+        """
+        Checks if the particular file exists. Convenient wrapper for os.path(f'{file_path}').isfile().
+        Usually to check if a job was even submitted.
+        :param file_name:
+        :return: True if file exists, False if not.
+        """
+        return os.path(file_path).isfile()
     
     @staticmethod
     def read_log_for_ENDING(log_file: str = 'log.txt') -> bool:
