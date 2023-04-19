@@ -474,9 +474,8 @@ class _NestedRunConditions(object):
             _boxes=self.Boxes,
             _mols=self.MolNums,
             _reps=self.Reps)
-        self.NumberOfConditions = len(self.Boxes) * len(self.MolNums) * len(self.Reps)
+        self.NumberOfConditions = len(self.MolNums.flatten()) * len(self.Reps)
         self.QSuccess = False
-        return None
     
     def __str__(self) -> str:
         """
@@ -1709,27 +1708,30 @@ class SystemSetup(object):
         else: #Normal grid.
             list_of_mol_nums = np.array([self.MolNums] * len(self.Boxes))
             
-        return np.copy(self.Boxes), list_of_mol_nums
+        return np.copy(self.Boxes), list_of_mol_nums[:]
 
 
 class SimulationSetup(object):
     """
     Main class used to instantiate systems that will be simulated.
     """
-    
-    def __init__(self, key_file, sys_name_list=None, simulations_path=None, num_of_reps: int=2, param_verbose: bool = True):
+
+    def __init__(
+            self, key_file, sys_name_list=None, simulations_path=None, num_of_reps: int = 2, param_verbose: bool
+            = True
+            ):
         """
 
         :param key_file: Absolute path to the key-file for this instance
         :param sys_name_list: The list of the unique system names.
         :param simulations_path: The absolute path where the simulations will take place.
         """
-        
+    
         if sys_name_list is None:
             sys_name_list = ["SysA"]
-        
+    
         self.KeyFileTemplate = IOUtils.read_param_file(file_name=key_file, verbose=param_verbose)
-        
+    
         self.CurrentDirectory = self._gen_curDir()
         self.Sims_Path = self._gen_simsPath(sims_path=simulations_path)
         self.Data_Path = self._gen_dataPath(sims_path=simulations_path)
