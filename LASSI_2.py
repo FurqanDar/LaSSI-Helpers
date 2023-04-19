@@ -465,7 +465,7 @@ class _NestedRunConditions(object):
     the list of box sizes, molecule numbers, and replicate numbers.
     """
     
-    def __init__(self, prefix: str, box_list: list, mol_list: list, rep_num: int):
+    def __init__(self, prefix: str, box_list: np.ndarray, mol_list: np.ndarray, rep_num: int):
         self.DirPrefix = prefix
         self.Boxes = np.array(box_list)
         self.MolNums = np.array(mol_list, dtype=int)
@@ -529,9 +529,10 @@ class _NestedRunConditions(object):
     def gen_nested_run_conditions_with_boxes_mols_reps(_boxes: np.ndarray, _mols: np.ndarray, _reps: np.ndarray) -> \
     Dict[str, Dict[str, Dict[str, Any]]]:
         """
-        Given the list of boxes, the list of molecules, and the list of replicates, we generate a deeply nested
-        dictionary. For every box-size, we loop over all the molecule numbers, and for every molecule, we loop over
-        all the replicates. Takes all the lists and make string based keys for each run condition.
+        Given the list of boxes, the list of list of molecules, and the list of replicates, we generate a deeply nested
+        dictionary. For every box-size, we loop over all the molecule numbers for that given box-size, and for every
+        molecule, we loop over all the replicates. Takes all the lists and make string based keys for each run
+        condition. Assumes that for each box-size, we have an associate list of molecule numbers.
         :param _boxes:
         :param _mols:
         :param _reps:
@@ -539,10 +540,10 @@ class _NestedRunConditions(object):
         is molecule numbers and the last is the replicates. Each value is set as None in this dictionary.
         """
         _totDict = {}
-        for aBox in _boxes:
+        for aBox, molSet in zip(_boxes, _mols):
             boxKey = str(aBox)
             _totDict[boxKey] = {}
-            for aMol in _mols:
+            for aMol in molSet:
                 numKey = _NestedRunConditions._mol_num_to_underscrore_str(aMol)
                 _totDict[boxKey][numKey] = {}
                 for aRep in _reps:
@@ -1763,9 +1764,6 @@ class SimulationSetup(object):
         
         assert thisSys.BoxesQ, f"{sysName} does not have set boxes!"
         assert thisSys.MolNumsQ, f"{sysName} does not have set molecule numbers!"
-        
-        boxList = thisSys.Boxes
-        molList = thisSys.MolNums
         
         boxList, molList = thisSys.get_independent_conditions()
         
