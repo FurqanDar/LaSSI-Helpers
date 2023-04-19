@@ -1434,7 +1434,7 @@ class SystemSetup(object):
         self.Structure = []
         self.StrucQ = False
         return None
-    
+
     def add_struc(self, sys_struc_ar):
         """
         Given a full structure array, like the ones produced by TopoUtils_Gen_Linear_System,
@@ -1690,7 +1690,7 @@ class SystemSetup(object):
         If a regular grid, then we have the same mol_num list for each box-size.
         If an ortho-grid, then for each box-size, we have the cycles of the molecule-numbers.
         
-        :return: [box_list, list_of_list_of_mol_nums]
+        :return: box_list, list_of_list_of_mol_nums
         """
         assert self.BoxesQ, "The boxes for this system have not been defined!"
         assert self.MolNumsQ, "The molecule numbers for this system have not been calculated!"
@@ -1766,6 +1766,9 @@ class SimulationSetup(object):
         
         boxList = thisSys.Boxes
         molList = thisSys.MolNums
+        
+        boxList, molList = thisSys.get_independent_conditions()
+        
         dirPre = self._gen_sims_dir_prefix_for(sysName)
     
         _tmpDict = _NestedRunConditions(prefix=dirPre,
