@@ -541,7 +541,8 @@ class _NestedRunConditions(object):
         _totDict = {}
         for aBox, molSet in zip(_boxes, _mols):
             boxKey = str(aBox)
-            _totDict[boxKey] = {}
+            if boxKey not in _totDict.keys():
+                _totDict[boxKey] = {}
             for aMol in molSet:
                 numKey = _NestedRunConditions._mol_num_to_underscrore_str(aMol)
                 _totDict[boxKey][numKey] = {}
