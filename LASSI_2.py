@@ -3432,7 +3432,7 @@ class _DataWithError(object):
         pos_data = self._non_negative()
         
         new_y = np.log10(pos_data.y)
-        new_e = pos_data.e / pos_data.y
+        new_e = pos_data.e / pos_data.y / np.log(10.0)
         
         return _DataWithError(pos_data.x, new_y, new_e)
     
