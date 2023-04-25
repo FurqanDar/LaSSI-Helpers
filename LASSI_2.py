@@ -4179,6 +4179,7 @@ class JobSubmission(object):
         JobSubmission.rename_log(run_it)
         JobSubmission.rename_param(run_it)
     
+    # TODO: Make ORTHO versions of the following functions
     @staticmethod
     def get_all_segfault_runs(SimObj: SimulationSetup, print_to_screen: bool = True):
         """
@@ -4189,14 +4190,13 @@ class JobSubmission(object):
         """
         dum_dir_list = SimObj._get_dirs_ofAll_perRep_perBox_perMol_perSys()
         tot_dir_list = []
-        if print_to_screen:
-            for dir_id, a_dir in enumerate(dum_dir_list):
-                dum_log_text = JobSubmission.read_log_for_segfault_failure(log_file=f'{a_dir}log.txt')
-                if len(dum_log_text):
-                    this_dir = "/".join(a_dir.split("/")[-6:-1])
-                    tot_dir_list.append(this_dir)
-                    if print_to_screen:
-                        print(this_dir)
+        for dir_id, a_dir in enumerate(dum_dir_list):
+            dum_log_text = JobSubmission.read_log_for_segfault_failure(log_file=f'{a_dir}log.txt')
+            if len(dum_log_text):
+                this_dir = "/".join(a_dir.split("/")[-6:-1])
+                tot_dir_list.append(this_dir)
+                if print_to_screen:
+                    print(this_dir)
     
         return tot_dir_list
 
