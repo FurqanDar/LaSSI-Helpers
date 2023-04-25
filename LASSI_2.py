@@ -2535,14 +2535,22 @@ class SimulationSetup(object):
         
         with open(dum_file_name, 'wb') as dFile:
             pickle.dump(dum_data, dFile)
-    
-    def save_CorrDen_for(self, sys_name, path_to_norm_data='', norm_naming_func=None, COMDen_file_name='__COMDen.dat'):
+
+    def save_CorrDen_for(self, sys_name, path_to_norm_data: str = '', norm_naming_func=None,
+                         COMDen_file_name: str = '__COMDen.dat', read_compressed: bool = True, write_compressed: bool
+                         = True):
         """
         Reads COMDen.dat for this system, and generate the CorrDen.dat and saves it to the data directory.
+        This function uses the singlet distribution from the COM of all molecules of a MolType.
         We save the [xAr_list, corr_den] using pickle
-        
-        :param sys_name:
-        :return:
+        :param sys_name: Internal name of the system used
+        :param path_to_norm_data: Full path to where the database of lattice normalizations are present
+        :param norm_naming_func: Function that is used to generate the naming scheme for different lattice sizes for
+        the normalization data.
+        :param COMDen_file_name: Name of the COMDen file. Is usually just __COMDen.dat
+        :param read_compressed: Whether the data are stored in a compressed format or not.
+        :param write_compressed: Whether to store the CorrDen data in compressed format or not.
+        :return: [xArList, corrDen]
         """
         
         this_sys = self.SysInfo[sys_name]
@@ -2550,8 +2558,12 @@ class SimulationSetup(object):
         dum_comden_name = self._gen_data_dir_prefix_for(sys_name) + COMDen_file_name + '.b'
         
         dum_comden_data = []
-        with open(dum_comden_name, 'rb') as dFile:
-            dum_comden_data = pickle.load(dFile)
+        if read_compressed:
+            with gzip.open(dum_comden_name, 'rb') as dFile:
+                dum_comden_data = pickle.load(dFile)
+        else:
+            with open(dum_comden_name, 'rb') as dFile:
+                dum_comden_data = pickle.load(dFile)
         
         dum_comden_analysis = COMDenUtils(total_comden_data=dum_comden_data,
                                           temp_nums=self.Num_Temps,
@@ -2563,28 +2575,44 @@ class SimulationSetup(object):
                                          naming_func=norm_naming_func)
         
         dum_corrden_name = self._gen_data_dir_prefix_for(sys_name) + '__CorrDen.dat.b'
-        with open(dum_corrden_name, 'wb') as dFile:
-            pickle.dump([dum_comden_analysis.xArr_list[:], dum_comden_analysis.corr_data[:]], dFile)
+        
+        if write_compressed:
+            with gzip.open(f"{dum_corrden_name}.gz", 'wb') as dFile:
+                pickle.dump([dum_comden_analysis.xArr_list[:], dum_comden_analysis.corr_data[:]], dFile)
+        else:
+            with open(dum_corrden_name, 'wb') as dFile:
+                pickle.dump([dum_comden_analysis.xArr_list[:], dum_comden_analysis.corr_data[:]], dFile)
         
         return None
     
-    def save_CorrDen_MolTypeCOM_for(self, sys_name, path_to_norm_data='', norm_naming_func=None,
-                                    COMDen_file_name='__COMDen.dat'):
+    def save_CorrDen_MolTypeCOM_for(self, sys_name, path_to_norm_data: str = '', norm_naming_func=None,
+                         COMDen_file_name: str = '__COMDen.dat', read_compressed: bool = True, write_compressed: bool
+                         = True):
         """
         Reads COMDen.dat for this system, and generate the CorrDen.dat and saves it to the data directory.
+        This function uses the singlet distribution from the COM of the largest cluster of molecule MolType.
         We save the [xAr_list, corr_den] using pickle
-        
-        :param sys_name:
-        :return:
+        :param sys_name: Internal name of the system used
+        :param path_to_norm_data: Full path to where the database of lattice normalizations are present
+        :param norm_naming_func: Function that is used to generate the naming scheme for different lattice sizes for
+        the normalization data.
+        :param COMDen_file_name: Name of the COMDen file. Is usually just __COMDen.dat
+        :param read_compressed: Whether the data are stored in a compressed format or not.
+        :param write_compressed: Whether to store the CorrDen data in compressed format or not.
+        :return: [xArList, corrDen]
         """
         
         this_sys = self.SysInfo[sys_name]
         
         dum_comden_name = self._gen_data_dir_prefix_for(sys_name) + COMDen_file_name + '.b'
-        
+
         dum_comden_data = []
-        with open(dum_comden_name, 'rb') as dFile:
-            dum_comden_data = pickle.load(dFile)
+        if read_compressed:
+            with gzip.open(dum_comden_name, 'rb') as dFile:
+                dum_comden_data = pickle.load(dFile)
+        else:
+            with open(dum_comden_name, 'rb') as dFile:
+                dum_comden_data = pickle.load(dFile)
         
         dum_comden_analysis = COMDenUtils(total_comden_data=dum_comden_data,
                                           temp_nums=self.Num_Temps,
@@ -2596,8 +2624,13 @@ class SimulationSetup(object):
                                          naming_func=norm_naming_func)
         
         dum_corrden_name = self._gen_data_dir_prefix_for(sys_name) + '__CorrDen_MolType.dat.b'
-        with open(dum_corrden_name, 'wb') as dFile:
-            pickle.dump([dum_comden_analysis.xArr_list[:], dum_comden_analysis.corr_data[:]], dFile)
+        
+        if write_compressed:
+            with gzip.open(f"{dum_corrden_name}.gz", 'wb') as dFile:
+                pickle.dump([dum_comden_analysis.xArr_list[:], dum_comden_analysis.corr_data[:]], dFile)
+        else:
+            with open(dum_corrden_name, 'wb') as dFile:
+                pickle.dump([dum_comden_analysis.xArr_list[:], dum_comden_analysis.corr_data[:]], dFile)
         
         return None
 
