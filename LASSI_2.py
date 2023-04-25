@@ -2559,7 +2559,7 @@ class SimulationSetup(object):
         
         dum_comden_data = []
         if read_compressed:
-            with gzip.open(dum_comden_name, 'rb') as dFile:
+            with gzip.open(f"{dum_comden_name}.gz", 'rb') as dFile:
                 dum_comden_data = pickle.load(dFile)
         else:
             with open(dum_comden_name, 'rb') as dFile:
@@ -2608,7 +2608,7 @@ class SimulationSetup(object):
 
         dum_comden_data = []
         if read_compressed:
-            with gzip.open(dum_comden_name, 'rb') as dFile:
+            with gzip.open(f"{dum_comden_name}.gz", 'rb') as dFile:
                 dum_comden_data = pickle.load(dFile)
         else:
             with open(dum_comden_name, 'rb') as dFile:
