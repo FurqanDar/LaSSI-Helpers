@@ -4021,9 +4021,10 @@ class JobSubmission(object):
         :param log_file: Name of the log-file. Usually just 'log.txt'
         :return:
         """
-        dum_comm = f'tail -n60 {log_file} | grep -c ENDING'
+        # dum_comm = f'tail -n60 {log_file} | grep -c ENDING'
+        dum_comm = f'grep -c -e "ENDING" {log_file}'
         dum_run = sproc.run(dum_comm, shell=True, capture_output=True, text=True)
-        return bool(int(dum_run.stdout[:-1]))
+        return int(dum_run.stdout[:-1]) == 1
     
     @staticmethod
     def read_log_for_segfault_failure(log_file='log.txt'):
