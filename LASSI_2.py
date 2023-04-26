@@ -2815,7 +2815,8 @@ class COMDenUtils(object):
         
         return None
     
-    def _get_norm_data(self, path_to_norm_data, box_size, naming_func=None):
+    @staticmethod
+    def _get_norm_data(path_to_norm_data, box_size, naming_func=None):
         """
         Fetch the normalization data given the box-size.
         
@@ -2827,7 +2828,7 @@ class COMDenUtils(object):
         assert box_size > 1, "Box-size should be bigger than 1!"
         
         if naming_func is None:
-            naming_func = self._gen_norm_filename
+            naming_func = COMDenUtils._gen_norm_filename
         
         dum_file_name = path_to_norm_data + naming_func(box_size)
         
