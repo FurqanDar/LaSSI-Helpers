@@ -1871,10 +1871,11 @@ class SimulationSetup(object):
     
         return None
         
-    def _collect_raw_data_for_fileName_for_nReps_for_sys(self, sysName: str, file_name: str, min_reps: int) -> list:
+    def _collect_raw_data_for_fileName_for_nReps_for_sys_as_deeply_nested_dict(self, sysName: str, file_name: str,
+                                                                               min_reps: int) -> Dict[str, Dict[str, Dict[str, Any]]]:
         """
         We collect the data for the given file_name, where we should have at least nReps successful
-        runs, and return a deeply nested list of that data. The returned list should have the format
+        runs, and return a deeply nested dict of that data. The returned dict should have the format
         [perBox][perMol][perRep]
         :param sysName:
         :param file_name:
@@ -1887,8 +1888,9 @@ class SimulationSetup(object):
                                   passed_func=np.loadtxt,
                                   file_name=file_name,
                                   min_reps=min_reps)
-        convert_func = _NestedRunConditions._convert_nested_dict_to_nested_list
-        return convert_func(_tmpDict)
+        # convert_func = _NestedRunConditions._convert_nested_dict_to_nested_list
+        # return convert_func(_tmpDict)
+        return _tmpDict
         
     def write_raw_data_for_fileName_for_nReps_for_sys_compressed(self, sysName: str, file_name: str, min_reps: int):
         """
@@ -1900,9 +1902,9 @@ class SimulationSetup(object):
         :return:
         """
         _save_file = self._gen_data_dir_prefix_for(sysName) + file_name + '.b'
-        _tmpDat = self._collect_raw_data_for_fileName_for_nReps_for_sys(sysName=sysName,
-                                                                        file_name=file_name,
-                                                                        min_reps=min_reps)
+        _tmpDat = self._collect_raw_data_for_fileName_for_nReps_for_sys_as_deeply_nested_dict(sysName=sysName,
+                                                                                              file_name=file_name,
+                                                                                              min_reps=min_reps)
         
         with gzip.open(_save_file+".gz", "wb") as sFile:
             pickle.dump(_tmpDat, sFile)
