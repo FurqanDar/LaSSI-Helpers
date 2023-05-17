@@ -1911,7 +1911,7 @@ class SimulationSetup(object):
         
         return None
 
-    def read_raw_data_for_fileName_for_sys_compressed(self, sysName: str, file_name: str) -> list:
+    def read_raw_data_for_fileName_for_sys_compressed(self, sysName: str, file_name: str):
         """
         Reads the given file_name from the appropriate data directory for this system. Assumes that gzip was used to
         generate the compressed data file. Returns a deeply nested list of the data.
@@ -4395,3 +4395,60 @@ class JobSubmission(object):
         return None
 
 
+class LaSSI_Plot(object):
+    """
+    A handy class that removes boilerplate coding when generating plots using LaSSI data. This class is mostly a
+    wrapper around pyplot.subplots and has facilities to aid in generating plots where the data are _DataWithError
+    instances.
+    [boxID, molID, tempID]
+    """
+    
+    def __init__(self,
+                 n_rows: int = 1,
+                 n_cols: int = 1,
+                 figsize: tuple = (10, 10),
+                 sharex: bool = True,
+                 sharey: bool = True):
+        self.fig, self.axArr = plt.subplots(n_rows, n_cols, figsize=figsize, sharex=sharex, sharey=sharey,
+                                            constrained_layout=True)
+        self.axArr = np.reshape(self.axArr, (n_rows, n_cols))
+        self.axList = self.axArr.flatten()
+    
+    @staticmethod
+    def set_ylabels(axArr, label: str = "Y Label", size: int = 20, color: str = 'red'):
+        [anAx.set_ylabel(f"{label}", color=color, fontsize=size) for anAx in axArr[:, 0]]
+    
+    @staticmethod
+    def set_xlabels(axArr, label: str = "X Label", size: int = 20, color: str = 'blue'):
+        [anAx.set_xlabel(f"{label}", color=color, fontsize=size) for anAx in axArr[-1, :]]
+    
+    def get_objs(self):
+        return self.fig, self.axArr, self.axList
+    
+    @staticmethod
+    def plot_data_perBox_perNum(axList, data, boxIDs: list, numIDs: list, tempID: int, label_func):
+        """
+        Assumes that the data have the following structure [boxID, molID, tempID]
+        :param axList:
+        :param data:
+        :param boxIDs:
+        :param numIDs:
+        :param tempID:
+        :param label_func:
+        :return:
+        """
+        for p_box, boxID in enumerate(boxIDs):
+            for p_num, numID in enumerate(numIDs):
+                _thisDat = data[boxID, numID, tempID]
+                xAr, yAr, eAr = _thisDat.get_data()
+                axList[p_box].plot(xAr, yAr, '.-', label=label_func(numID), alpha=0.9, color=plt.cm.turbo(numID / 11.))
+    
+    @staticmethod
+    def add_fig_legend(thisFig, axList: list, title: str = "RNA: Mac"):
+        handles, legends = axList[-1].get_legend_handles_labels()
+        thisFig.legend(handles, legends, bbox_to_anchor=(1.0, 0.5, 0.0, 0.0), loc='center left', title=f"{title}")
+    
+    @staticmethod
+    def add_text_zip_list_to_subplots(axList: list, textList: list, bbox: dict):
+        for ax, text in zip(axList, textList):
+            ax.text(0.5, 0.8, text, transform=ax.transAxes, fontsize=20, va='center', ha='center', bbox=bbox)
