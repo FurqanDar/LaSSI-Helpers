@@ -170,7 +170,7 @@ class TrjClusterAnalysis(object):
     """
 
     @staticmethod
-    def from_frame_get_bond_pairs_of_beads(a_bP_list: np.ndarray):
+    def from_frame_get_bond_pairs_of_beads(a_bP_list: np.ndarray) -> np.ndarray:
         """
         Goes over the bondPartner list and finds _all_ pairs of bonded beads. Since bonds are symmetric, this produces
         a redundant list.
