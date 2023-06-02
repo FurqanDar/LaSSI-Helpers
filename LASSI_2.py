@@ -62,7 +62,7 @@ class _TopoUtils_Linear_Molecule_Back(object):
         """
         self.InterBlockLinkers.append(linker_len)
     
-    def repeat_block(self, bead_list, linker_list, inter_linker, repeat_num=5):
+    def repeat_block(self, bead_list, linker_list, inter_linker, repeat_num):
         """
         Similar to add_block, we repeat the supplied block of bead-types (in bead_list) where the beads are connected
         via linkers (in linker_list). We repeat the block repeat_num times, and each block has inter_linker linker
