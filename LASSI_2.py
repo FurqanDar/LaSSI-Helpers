@@ -2567,6 +2567,9 @@ class SimulationSetup(object):
             with open(dum_comden_name, 'rb') as dFile:
                 dum_comden_data = pickle.load(dFile)
         
+        if type(dum_comden_data) == dict:
+            dum_comden_data = _NestedRunConditions._convert_nested_dict_to_nested_list(dum_comden_data)
+
         dum_comden_analysis = COMDenUtils(total_comden_data=dum_comden_data,
                                           temp_nums=self.Num_Temps,
                                           comp_nums=this_sys.CompNum,
