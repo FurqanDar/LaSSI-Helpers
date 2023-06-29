@@ -368,6 +368,28 @@ class TrjClusterAnalysis(object):
         return adj_mats
 
 
+    @staticmethod
+    def from_adj_matrix_of_frame_gen_cluster_labels(adj_mat: np.ndarray) -> np.ndarray:
+        """
+        Given an adjacency matrix, we get the cluster labels for each node in the system. We convert the array to a
+        csr_matrix, and then use sknetwork to get all connected components. Then, each molID gets its own cluster-label.
+        :param adj_mat:
+        :return: sknetwork.topology.connected_components(sp.sparse.csr_matrix(adj_mat))
+        """
+        csr_mat = sp.sparse.csr_matrix(adj_mat)
+        
+        return sknetwork.topology.connected_components(csr_mat)
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+
 class TrjClusterAnalysis_SameMolSizes(object):
     """
     Clustering analysis class which assumes that all the molecules in the trajectories have the same sizes.
