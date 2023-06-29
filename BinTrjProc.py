@@ -170,7 +170,7 @@ class TrjClusterAnalysis(object):
     """
 
     @staticmethod
-    def from_frame_get_bond_pairs_of_beads(a_bP_list: np.ndarray) -> np.ndarray:
+    def from_frame_get_bonded_pairs_of_beads(a_bP_list: np.ndarray) -> np.ndarray:
         """
         Goes over the bondPartner list and finds _all_ pairs of bonded beads. Since bonds are symmetric, this produces
         a redundant list.
@@ -192,8 +192,14 @@ class TrjClusterAnalysis(object):
     
         return ret_val
 
+
+class TrjClusterAnalysis_SameMolSizes(object):
+    """
+    Clustering analysis class which assumes that all the molecules in the trajectories have the same sizes.
+    """
+    
     @staticmethod
-    def from_frame_get_bond_pairs_of_mols_assuming_same_molSize(a_bP_list: np.ndarray, mol_size: int = 55):
+    def from_frame_get_bonded_pairs_of_mols_assuming_same_mol_size(a_bP_list: np.ndarray, mol_size: int = 55):
         """
         Given the (i, j) bead pairs that are bonded, we divide by the molecule size to produce a list of (I,J) pairs
         of moleculeIDs. Similarly to the beads version, this produces a redundant non-unique list of pairs.
@@ -208,10 +214,10 @@ class TrjClusterAnalysis(object):
         :param mol_size Size of the molecules in the system. Assumes all have the same size.
         :return firstMol, secondMol. This has shape (2, N), where N is number of mol-bonds
         """
-        return TrjClusterAnalysis.from_frame_get_bond_pairs_of_beads(a_bP_list) // mol_size
-
+        return TrjClusterAnalysis.from_frame_get_bonded_pairs_of_beads(a_bP_list) // mol_size
+    
     @staticmethod
-    def from_frame_get_unique_molecule_bond_pairs_assuming_same_molSize(a_bP_list: np.ndarray, mol_size: int = 55):
+    def from_frame_get_unique_molecule_bond_pairs_assuming_same_mol_size(a_bP_list: np.ndarray, mol_size: int = 55):
         """
         Goes over the bondPartner list, which is the anisotropic interaction bond from LaSSI, and
         gets all the unique pairs of bonded molecules.
@@ -219,15 +225,13 @@ class TrjClusterAnalysis(object):
         :param mol_size Size of the molecules in the system. Assumes all have the same size.
         :return firstMol, secondMol. This has shape (2, N), where N is the number of unique mol-bonds.
         """
-        return np.unique(TrjClusterAnalysis.from_frame_get_bond_pairs_of_mols_assuming_same_molSize(a_bP_list=a_bP_list,
-                                                                                                    mol_size=mol_size),
-                         axis=1)
-    
+        return np.unique(TrjClusterAnalysis_SameMolSizes.from_frame_get_bonded_pairs_of_mols_assuming_same_mol_size(
+                a_bP_list=a_bP_list, mol_size=mol_size), axis=1)
     
     @staticmethod
-    def from_frame_get_intra_and_inter_molecule_bonds_for_each_molecule_assuming_same_molSize(a_bP_list: np.ndarray,
-                                                                                              mol_num: int = 1000,
-                                                                                              mol_size:int = 55):
+    def from_frame_get_intra_and_inter_molecule_bonds_for_each_molecule_assuming_same_mol_size(a_bP_list: np.ndarray,
+                                                                                               mol_num: int = 1000,
+                                                                                               mol_size: int = 55):
         """
         Get the number of intra-molecular bonds and inter-molecular bonds for all chains.
          > Given the beadFaces, we first get the pairs of bonds converted to chainIDs
@@ -240,23 +244,25 @@ class TrjClusterAnalysis(object):
         :param mol_num The number of molecules in the system.
         :return intraBonds, interBonds. This has shape (2, N), where N is the number of molecules
         """
-    
-        _dum_bond_pairs = TrjClusterAnalysis.from_frame_get_bond_pairs_of_mols_assuming_same_molSize(a_bP_list,
-                                                                                                     mol_size=mol_size)
+        
+        _dum_bond_pairs = TrjClusterAnalysis_SameMolSizes.from_frame_get_bonded_pairs_of_mols_assuming_same_mol_size(
+                a_bP_list, mol_size=mol_size)
         bnd_hist = np.zeros((mol_num, 2), dtype=int)
-    
+        
         unique_elms, elm_ids, total_bonds = np.unique(_dum_bond_pairs[0], return_counts=True, return_index=True)
-    
+        
         for elmID, (molID, bndID, tot_bnds) in enumerate(zip(unique_elms, elm_ids, total_bonds)):
             _bond_list = _dum_bond_pairs[1][bndID: bndID + tot_bnds]
             intra_bonds = np.count_nonzero(_bond_list == molID)
-        
+            
             bnd_hist[molID, 0] = intra_bonds
             bnd_hist[molID, 1] = tot_bnds - intra_bonds
         return bnd_hist
     
     @staticmethod
-    def from_frame_gen_molecule_adjacency_matrix_assuming_same_molSize(a_bP_list: np.ndarray, mol_size: int = 55, mol_num: int = 1000):
+    def from_frame_gen_molecule_adjacency_matrix_assuming_same_mol_size(a_bP_list: np.ndarray,
+                                                                        mol_size: int = 55,
+                                                                        mol_num: int = 1000):
         """
         Goes over the bondPartner list, which is the anisotropic interaction bond from LaSSI, and
         gets all the unique pairs of bonded molecules, and returns the pairs as an adjacency matrix.
@@ -265,17 +271,20 @@ class TrjClusterAnalysis(object):
         :param mol_num  Number of molecules in the system.
         :return AdjMat of shape (mol_size, mol_size)
         """
-    
+        
         dum_mat = np.zeros((mol_num, mol_num), dtype=int)
-    
-        dum_mol_bonds = TrjClusterAnalysis.from_frame_get_unique_molecule_bond_pairs_assuming_same_molSize(a_bP_list=a_bP_list, mol_size=mol_size)
-    
+        
+        dum_mol_bonds = TrjClusterAnalysis_SameMolSizes.from_frame_get_unique_molecule_bond_pairs_assuming_same_mol_size(
+                a_bP_list=a_bP_list, mol_size=mol_size)
+        
         dum_mat[dum_mol_bonds[0], dum_mol_bonds[1]] = 1
-    
+        
         return dum_mat
     
     @staticmethod
-    def from_frame_get_connected_molecule_components_assuming_same_molSize(a_bP_list: np.ndarray, mol_size: int = 55, mol_num: int = 1000):
+    def from_frame_get_connected_molecule_components_assuming_same_mol_size(a_bP_list: np.ndarray,
+                                                                            mol_size: int = 55,
+                                                                            mol_num: int = 1000):
         """
         Returns all the connected components where nodes are molecules, and not beads.
         :param a_bP_list a list of beadPartner or beadFaces
@@ -283,16 +292,17 @@ class TrjClusterAnalysis(object):
         :param mol_num  Number of molecules in the system.
         :return labelList of shape (mol_num) which assigns a unique cluster identity to each chain/molecule
         """
-    
-        dum_adj_mat = TrjClusterAnalysis.from_frame_gen_molecule_adjacency_matrix_assuming_same_molSize(a_bP_list=a_bP_list,
-                                                                                                        mol_size=mol_size,
-                                                                                                        mol_num=mol_num)
+        
+        dum_adj_mat = TrjClusterAnalysis_SameMolSizes.from_frame_gen_molecule_adjacency_matrix_assuming_same_mol_size(
+                a_bP_list=a_bP_list, mol_size=mol_size, mol_num=mol_num)
         dum_adj_mat = sp.sparse.csr_matrix(dum_adj_mat)
-    
+        
         return sknetwork.topology.connected_components(dum_adj_mat)
     
     @staticmethod
-    def from_trajectory_get_connected_molecule_components_assuming_same_molSize(full_trj: np.ndarray, mol_size: int = 55, mol_num: int = 1000):
+    def from_trajectory_get_connected_molecule_components_assuming_same_mol_size(full_trj: np.ndarray,
+                                                                                 mol_size: int = 55,
+                                                                                 mol_num: int = 1000):
         """
         Returns all the connected components where nodes are molecules, and not beads. For the entire trajectory.
         :param full_trj We only care about the last coordinate from each frame.
@@ -304,19 +314,11 @@ class TrjClusterAnalysis(object):
         num_frms = trj_shape[0]
         num_beads = trj_shape[1]
         num_crds = trj_shape[2]
-    
+        
         trj_conn_comps = np.zeros((num_frms, mol_num), dtype=int)
-    
+        
+        analysis_func = TrjClusterAnalysis_SameMolSizes.from_frame_get_connected_molecule_components_assuming_same_mol_size
+        
         for frmID, aFrame in enumerate(full_trj[:, :, -1]):
-            trj_conn_comps[frmID] = TrjClusterAnalysis.from_frame_get_connected_molecule_components_assuming_same_molSize(a_bP_list=aFrame,
-                                                                                                                          mol_size=mol_size,
-                                                                                                                          mol_num=mol_num)
+            trj_conn_comps[frmID] = analysis_func(a_bP_list=aFrame, mol_size=mol_size, mol_num=mol_num)
         return trj_conn_comps
-    
-    
-    
-    
-    
-    
-    
-    
