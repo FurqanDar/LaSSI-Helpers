@@ -253,6 +253,26 @@ class TrjClusterAnalysis(object):
         
         return adj_mat
 
+    @staticmethod
+    def from_pairs_of_bonded_mols_of_all_frames_gen_adjacency_matrices_given_mols(bonded_mols_all_frames: list,
+                                                                                  mol_nums: np.ndarray) -> np.ndarray:
+        """
+        Given the pairs-of-bonded-mols over multiple frames, and the total numbers of molecules, we generate a molecular
+        adjacency matrix. We produce an unweighted adjacency matrix by simply setting the corresponding each-weight from a
+        molecule-pair to 1.
+        :param bonded_mols:
+        :param mol_nums:
+        :return: txNxN adjacency matrix where t is the total number of frames give, and N is the total number of molecules.
+        """
+        n_frames = len(bonded_mols_all_frames)
+        tot_mols = mol_nums.sum()
+        adj_mat = np.zeros((n_frames, tot_mols, tot_mols), int)
+        for frameID, aFrame in enumerate(bonded_mols_all_frames):
+            for i, j in zip(aFrame[0], aFrame[1]):
+                adj_mat[frameID, i, j] = 1
+                adj_mat[frameID, j, i] = 1
+        
+        return adj_mat
 
 
 class TrjClusterAnalysis_SameMolSizes(object):
