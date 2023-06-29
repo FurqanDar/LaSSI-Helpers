@@ -344,7 +344,7 @@ class TrjClusterAnalysis(object):
     
     
     @staticmethod
-    def from_trajectory_gen_mol_adj_matrix(trajectory: btp.TrjExtractor,
+    def from_trajectory_gen_mol_adj_matrix(trajectory: TrjExtractor,
                                            mol_nums: np.ndarray,
                                            mol_sizes: np.ndarray) -> np.ndarray:
         """
