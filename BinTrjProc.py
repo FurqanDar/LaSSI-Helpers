@@ -5,6 +5,7 @@ import numpy as np
 import scipy as sp
 import sknetwork
 import sys
+from typing import List, Dict, Any
 
 _INT_SIZE = 4
 _BYTE_ORDER = sys.byteorder
@@ -191,6 +192,18 @@ class TrjClusterAnalysis(object):
         ret_val[1] = dum_parts
     
         return ret_val
+    
+    @staticmethod
+    def from_bonds_of_all_frames_get_pairs_of_bonded_beads(all_bond_frames: np.ndarray) -> List[np.ndarray]:
+        """
+        Given the bonds from multiple frames, we iterate over the frames and generate the pairs-of-bonded beads for each
+        frame.
+        :param all_bond_frames:
+        :return:  [btp.TrjClusterAnalysis.from_frame_get_bond_pairs_of_beads(aFrame) for aFrame in all_bond_frames]
+        """
+        return [TrjClusterAnalysis.from_frame_get_bonded_pairs_of_beads(aFrame) for aFrame in all_bond_frames]
+
+
 
 
 class TrjClusterAnalysis_SameMolSizes(object):
