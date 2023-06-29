@@ -396,7 +396,20 @@ class TrjClusterAnalysis(object):
         return clus_labs
     
     
-    
+    @staticmethod
+    def from_trajectory_get_cluster_labels(trajectory: TrjExtractor,
+                                           mol_nums: np.ndarray,
+                                           mol_sizes: np.ndarray) -> np.ndarray:
+        """
+        Given a TrjExtractor object, the numbers of molecules in the trajectory, and the corresponding sizes of each of the
+        molecules in the trajectory, we get the cluster labels for each molecule for every frame.
+        :param trajectory:
+        :param mol_nums:
+        :param mol_sizes:
+        :return cluster_labels:
+        """
+        adj_matrices = TrjClusterAnalysis.from_trajectory_gen_mol_adj_matrix(trajectory=trajectory, mol_nums=mol_nums, mol_sizes=mol_sizes)
+        return TrjClusterAnalysis.from_adj_matrices_of_all_frames_gen_cluster_labels(adj_mats_all_frames=adj_matrices)
     
     
     
