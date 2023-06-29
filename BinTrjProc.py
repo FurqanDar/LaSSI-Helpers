@@ -615,7 +615,6 @@ class TrjClusterAnalysis(object):
             clus_weights[frmID] = TrjClusterAnalysis.calc_mean_clus_squared_weight_from_weight_composition(aFrame)
         
         return clus_weights
-    
 
 class TrjClusterAnalysis_SameMolSizes(object):
     """

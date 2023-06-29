@@ -8,21 +8,18 @@ New LaSSI Helper modules. Contains two main modules:
 __author__ = 'Furqan Dar'
 __version__ = 0.3
 
-import gzip
 
 import matplotlib.axes
 import numpy as np
 import scipy as sp
-import os
+import os, time, copy
 import subprocess as sproc
-import pickle
+import pickle, gzip
 import matplotlib.pyplot as plt
-import copy
 from tqdm.auto import tqdm
-import time
 
-from typing import Dict
-from typing import Any
+from typing import Dict, List, Any
+import BinTrjProc as btp
 
 class _TopoUtils_Linear_Molecule_Back(object):
     """
@@ -2635,7 +2632,43 @@ class SimulationSetup(object):
                 pickle.dump([dum_comden_analysis.xArr_list[:], dum_comden_analysis.corr_data[:]], dFile)
         
         return None
-
+    
+    def get_cluster_labels_from_trajectories_for_nReps_as_deeply_nested_dict_for_sys(self,
+                                                                                     sys_name: str,
+                                                                                     min_reps: int,
+                                                                                     traj_name: str = '__trj.lassi') -> \
+            Dict[str, Dict[str, Dict[str, Any]]]:
+        """
+        Given this system, we generate a deeply nested dictionary of cluster-labels by explicitly analyzing the
+        trajectories. Can take a long time to run, and might generate data that is larger than gzip and pickle and handle.
+        :param sys_name:
+        :param min_reps:
+        :return:
+        """
+        assert self.RunInfo[sys_name].QSuccess, "Can only be run on nested dicts that have checked for run success!"
+        assert self.RunInfo[sys_name].check_if_at_least_n_reps_successful(
+                min_reps), f"This system does not have at least {min_reps}."
+        
+        mol_sizes = self.SysInfo[sys_name].calc_struc_beads_per_molecule()
+        runs_dir = self.Sims_Path
+        run_conditions = self.RunInfo[sys_name].NestedRunConditions
+        
+        clus_labels = {}
+        for boxSize, aBox in run_conditions.items():
+            clus_labels[boxSize] = {}
+            for molNum, aMol in aBox.items():
+                clus_labels[boxSize][molNum] = {}
+                mol_nums = btp.TrjUtils.mol_str_to_numpy(molNum)
+                rep_it = 0
+                for repID, repVal in aMol.items():
+                    if repVal and rep_it < min_reps:
+                        traj_path = f'{runs_dir}{sys_name}/{boxSize}/{molNum}/WInt/{repID}/{traj_name}'
+                        
+                        clus_labels[boxSize][molNum][repID] = btp.TrjClusterAnalysis.from_trajectory_get_cluster_labels(
+                                trajectory=btp.TrjExtractor(file_path=traj_path), mol_nums=mol_nums,
+                                mol_sizes=mol_sizes)
+                        
+        return clus_labels
 
 class COMDenUtils(object):
     """
