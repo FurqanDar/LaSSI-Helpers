@@ -434,6 +434,38 @@ class TrjClusterAnalysis(object):
         return [analysis_func(aFrame) for aFrame in clus_labs_all_frames]
     
     
+    @staticmethod
+    def from_clusters_chainIDs_of_frame_get_chainTypes_for_clusters(clusters_dict: Dict[int, np.ndarray],
+                                                                    chainTypes_for_chainIDs: np.ndarray) -> Dict[
+        int, np.ndarray]:
+        """
+        Given the dictionary of (clusterLabel: [chainIDs in cluster]), and chainTypes for a chainID,
+         we return a dictionary that has the chainTypes for all the chainIDs in all the clusters:
+            {clusterLabel: [chainTypes in cluster]}
+        :param clusters_dict: Usually the output of from_clus_labels_of_frame_gen_clusters_chainIDs
+        :param chainTypes_for_chainIDs:
+        :return clus_chainTypes:
+        """
+        
+        return {clus_lab: TrjUtils.get_chain_types_for_given_chain_ids(chain_ids=clus_chains,
+                                                                       chainTypes_for_chainIDs=chainTypes_for_chainIDs)
+                for clus_lab, clus_chains in clusters_dict.items()}
+    
+    
+    @staticmethod
+    def from_clusters_chainIDs_of_all_frames_get_chainTypes_for_clusters(clusters_dict_all_frames: list,
+                                                                         chainTypes_for_chainIDs: np.ndarray) -> List[
+        Dict[int, np.ndarray]]:
+        """
+        Convenience function to get the chainTypes in each cluster for multiple frames of {clusterLabel: [chainIDs]}
+        :param clusters_dict_all_frames:
+        :param chainTypes_for_chainIDs:
+        :return:
+        """
+        return [TrjClusterAnalysis.from_clusters_chainIDs_of_frame_get_chainTypes_for_clusters(aFrame,
+                                                                                               chainTypes_for_chainIDs)
+                for aFrame in clusters_dict_all_frames]
+    
     
     
     
