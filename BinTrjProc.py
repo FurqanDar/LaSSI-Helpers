@@ -3,6 +3,7 @@ __version__ = '0.0.3'
 
 import numpy as np
 import scipy as sp
+import pandas as pd
 import sknetwork
 import sys
 from typing import List, Dict, Any
@@ -410,6 +411,27 @@ class TrjClusterAnalysis(object):
         """
         adj_matrices = TrjClusterAnalysis.from_trajectory_gen_mol_adj_matrix(trajectory=trajectory, mol_nums=mol_nums, mol_sizes=mol_sizes)
         return TrjClusterAnalysis.from_adj_matrices_of_all_frames_gen_cluster_labels(adj_mats_all_frames=adj_matrices)
+    
+    @staticmethod
+    def from_clus_labels_of_frame_gen_clusters_chainIDs(clus_labs: np.ndarray) -> Dict[int, np.ndarray]:
+        """
+        Given the cluster labels of a frame, we collect all the chainIDs corresponding to each cluster label. The
+        returned dictionary has cluster labels as keys, and an array of the chainIDs for that cluster.
+        :param clus_labs:
+        :return cluster_chainIDs: pd.DataFrame(clus_labs).groupby([0]).indices
+        """
+        return pd.DataFrame(clus_labs).groupby([0]).indices
+    
+    @staticmethod
+    def from_clus_labels_of_all_frames_gen_clusters_chainIDs(clus_labs_all_frames: np.ndarray) -> List[
+        Dict[int, np.ndarray]]:
+        """
+        Convenience function to get the cluster chainIDs from multiple frames of cluster labels.
+        :param clus_labs_all_frames:
+        :return clus_chainIDs_all_frames:
+        """
+        analysis_func = TrjClusterAnalysis.from_clus_labels_of_frame_gen_clusters_chainIDs
+        return [analysis_func(aFrame) for aFrame in clus_labs_all_frames]
     
     
     
