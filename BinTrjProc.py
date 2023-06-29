@@ -521,6 +521,39 @@ class TrjClusterAnalysis(object):
         return TrjClusterAnalysis.from_clusters_chainTypes_of_all_frames_get_compositions(clus_chainTypes_all_frames,
                                                                                           max_type=max_chain_type)
     
+    @staticmethod
+    def from_cluster_number_composition_gen_cluster_weights_composition(clus_comps_frame: np.ndarray,
+                                                                        mol_sizes: np.ndarray) -> np.ndarray:
+        """
+        Given the chainType composition of each cluster, and the molecule sizes for each corresponding chainType, we
+        calculate the _weight_ of the clusters, or the total number of beads in that cluster. If we have a cluster of
+        composition c=(c_1, c_2, ...) where c_i corresponds to the number of that chainType in that cluster, and we have
+        molecule sizes n=(n_1, n_2, ...) where n_i corresponds to the number of beads for that chainType, then the weight
+        composition of that cluster is w=(c_1*n_1, ...). The total weight would be the sum of these weights.
+        :param clus_comps_frame:
+        :param mol_sizes:
+        :return:
+        """
+        num_clus = clus_comps_frame.shape[0]
+        tmp_sizes = np.repeat([mol_sizes], num_clus, axis=0)
+        
+        return clus_comps_frame * tmp_sizes
+    
+    
+    @staticmethod
+    def from_cluster_number_composition_of_traj_gen_cluster_weights_composition(clus_comps_all_frames: List[np.ndarray],
+                                                                                mol_sizes: np.ndarray) -> List[
+        np.ndarray]:
+        """
+        Convenience function to calculate the weight-composition of the clusters from multiple frames.
+        :param clus_comps_frames:
+        :param mol_sizes:
+        :return:
+        """
+        
+        analyze_func = TrjClusterAnalysis.from_cluster_number_composition_gen_cluster_weights_composition
+        
+        return [analyze_func(clus_comps_frame=aFrame, mol_sizes=mol_sizes) for aFrame in clus_comps_all_frames]
     
 
 class TrjClusterAnalysis_SameMolSizes(object):
