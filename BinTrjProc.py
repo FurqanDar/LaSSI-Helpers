@@ -502,9 +502,24 @@ class TrjClusterAnalysis(object):
         """
         
         analysis_func = TrjClusterAnalysis.from_cluster_chainTypes_of_clusters_of_frame_get_compositions
-        return [analysis_func(clusters_dict=aFrame, max_type=max_type)
-                for aFrame in clusters_chaintypes_all_frames]
+        return [analysis_func(clusters_dict=aFrame, max_type=max_type) for aFrame in clusters_chaintypes_all_frames]
     
+    
+    @staticmethod
+    def from_cluster_labels_of_all_frames_get_cluster_compositions(clus_labs_all_frames: np.ndarray,
+                                                                   chainTypes_for_chainIDs: np.ndarray) -> List[
+        np.ndarray]:
+        
+        max_chain_type = max(chainTypes_for_chainIDs)
+        
+        clus_chainIDs_all_frames = TrjClusterAnalysis.from_clus_labels_of_all_frames_gen_clusters_chainIDs(
+                clus_labs_all_frames=clus_labs_all_frames)
+        
+        clus_chainTypes_all_frames = TrjClusterAnalysis.from_clusters_chainIDs_of_all_frames_get_chainTypes_for_clusters(
+                clusters_dict_all_frames=clus_chainIDs_all_frames, chainTypes_for_chainIDs=chainTypes_for_chainIDs)
+        
+        return TrjClusterAnalysis.from_clusters_chainTypes_of_all_frames_get_compositions(clus_chainTypes_all_frames,
+                                                                                          max_type=max_chain_type)
     
     
 
