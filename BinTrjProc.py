@@ -220,6 +220,20 @@ class TrjClusterAnalysis(object):
         
         return bonded_mols
 
+    @staticmethod
+    def from_bonded_pairs_of_beads_of_all_frames_get_bonded_pairs_of_mols_for_trajectory(bonded_beads_all_frames: list,
+                                                                                         mol_ids_for_each_bead_id: np.ndarray) -> \
+            List[np.ndarray]:
+        """
+        Given the pairs-of-bonded-beads for multiple frames, we iterate over the frames and generate the pairs-of-bonded-mols
+        for each frame.
+        :param bonded_beads_all_frames:
+        :param mol_ids_for_each_bead_id:
+        :return: [from_bonded_pairs_of_beads_get_bonded_pairs_of_mols(aFrame, mol_ids_for_each_bead_id) for aFrame in bonded_beads_all_frames]
+        """
+        return [TrjClusterAnalysis.from_bonded_pairs_of_beads_get_bonded_pairs_of_mols(aFrame, mol_ids_for_each_bead_id) for aFrame in
+                bonded_beads_all_frames]
+
 
 
 class TrjClusterAnalysis_SameMolSizes(object):
