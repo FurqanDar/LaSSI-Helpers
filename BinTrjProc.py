@@ -341,6 +341,31 @@ class TrjClusterAnalysis(object):
                 adj_mat[frameID, j, i] = 1
         
         return adj_mat
+    
+    
+    @staticmethod
+    def from_trajectory_gen_mol_adj_matrix(trajectory: btp.TrjExtractor,
+                                           mol_nums: np.ndarray,
+                                           mol_sizes: np.ndarray) -> np.ndarray:
+        """
+        Given a TrjExtractor object, the numbers of molecules in the trajectory, and the corresponding sizes of each of the
+        molecules in the trajectory, we generate molecular adjacency matrices for each frame in the trajectory.
+        :param trajectory:
+        :param mol_nums:
+        :param mol_sizes:
+        :return: txNxN adjacency matrix where t is the total number of frames give, and N is the total number of molecules.
+        """
+        mol_ids_for_beads = TrjUtils.gen_mol_ids_per_bead_given_mol_nums_and_sizes(mol_nums=mol_nums,
+                                                                                   mol_sizes=mol_sizes)
+        bonded_bead_pairs_all_frames = TrjClusterAnalysis.from_bonds_of_all_frames_get_pairs_of_bonded_beads(
+                all_bond_frames=trajectory.extract_bonds())
+        bonded_mol_pairs_all_frames = TrjClusterAnalysis.from_bonded_pairs_of_beads_of_all_frames_get_bonded_pairs_of_mols_for_trajectory(
+                bonded_beads_all_frames=bonded_bead_pairs_all_frames, mol_ids_for_each_bead_id=mol_ids_for_beads)
+        
+        adj_mats = TrjClusterAnalysis.from_pairs_of_bonded_mols_of_all_frames_gen_adjacency_matrices_given_mols(
+                bonded_mols_all_frames=bonded_mol_pairs_all_frames, mol_nums=mol_nums)
+        
+        return adj_mats
 
 
 class TrjClusterAnalysis_SameMolSizes(object):
