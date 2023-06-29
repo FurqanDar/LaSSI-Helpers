@@ -467,6 +467,44 @@ class TrjClusterAnalysis(object):
                 for aFrame in clusters_dict_all_frames]
     
     
+    @staticmethod
+    def from_cluster_chainTypes_get_composition(chain_types: np.ndarray, max_type: int) -> np.ndarray:
+        """
+        From an array of chainTypes, we calculate the occurrences of chainTypes up to the largest chainType (max_type).
+        :param chain_types:
+        :param max_type:
+        :return:
+        """
+        
+        return np.array([np.count_nonzero(chain_types == i) for i in range(max_type + 1)])
+    
+    
+    @staticmethod
+    def from_cluster_chainTypes_of_clusters_of_frame_get_compositions(clusters_dict: dict, max_type: int) -> np.ndarray:
+        """
+        Given a {clusterLabel:[chainTypes in cluster]} dictionary, we calculate the type-composition of each cluster.
+        :param clusters_dict:
+        :param max_type:
+        :return:
+        """
+        analysis_func = TrjClusterAnalysis.from_cluster_chainTypes_get_composition
+        return np.array([analysis_func(chain_types=a_clus, max_type=max_type) for a_clus in clusters_dict.values()])
+    
+    
+    @staticmethod
+    def from_clusters_chainTypes_of_all_frames_get_compositions(clusters_chaintypes_all_frames: list, max_type: int) -> \
+    List[np.ndarray]:
+        """
+        Convenience function to get the cluster type-composition from multiple frames.
+        :param clusters_chaintypes_all_frames:
+        :param max_type:
+        :return:
+        """
+        
+        analysis_func = TrjClusterAnalysis.from_cluster_chainTypes_of_clusters_of_frame_get_compositions
+        return [analysis_func(clusters_dict=aFrame, max_type=max_type)
+                for aFrame in clusters_chaintypes_all_frames]
+    
     
     
 
