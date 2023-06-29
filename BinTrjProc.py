@@ -203,6 +203,22 @@ class TrjClusterAnalysis(object):
         """
         return [TrjClusterAnalysis.from_frame_get_bonded_pairs_of_beads(aFrame) for aFrame in all_bond_frames]
 
+    @staticmethod
+    def from_bonded_pairs_of_beads_get_bonded_pairs_of_mols(bonded_beads: np.ndarray,
+                                                            chainIDs_for_beadIDs: np.ndarray) -> np.ndarray:
+        """
+        Given the pairs-of-bonded beads, and the molIDs for the beadIDs, we generate the pairs-of-bonded-mols.
+        Since we go from beads to molecules, the list of bonded molecules can have redundant pairs if multiple beads were
+        bonded from two of molecules to each other.
+        :param bonded_beads:
+        :param chainIDs_for_beadIDs:
+        :return:
+        """
+        bonded_mols = np.zeros_like(bonded_beads, int)
+        bonded_mols[0, :] = chainIDs_for_beadIDs[bonded_beads[0, :]]
+        bonded_mols[1, :] = chainIDs_for_beadIDs[bonded_beads[1, :]]
+        
+        return bonded_mols
 
 
 
