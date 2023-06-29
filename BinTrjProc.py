@@ -185,6 +185,53 @@ class TrjUtils(object):
         
         return np.repeat(mol_sizes, mol_nums)
     
+    @staticmethod
+    def gen_mol_ids_per_bead_given_mol_nums_and_sizes(mol_nums: np.ndarray,
+                                                               mol_sizes: np.ndarray) -> np.ndarray:
+        """
+        Given the numbers of molecules, and the corresponding sizes of each of the molecules, we generate a list of
+        molecule-ids for each bead in the system. Gives each beadID its own molID.
+        :param mol_nums:
+        :param mol_sizes:
+        :return molID_per_bead: np.repeat(chain_ids_per_mol, chain_sizes_per_mol)
+        """
+        chain_sizes_per_mol = TrjUtils.gen_mol_sizes_per_mol_given_nums_and_sizes(mol_nums, mol_sizes)
+        chain_ids_per_mol = np.arange(np.sum(mol_nums))
+        
+        return np.repeat(chain_ids_per_mol, chain_sizes_per_mol)
+    
+    @staticmethod
+    def gen_chain_types_per_chain_given_mol_nums(mol_nums: np.ndarray) -> np.ndarray:
+        """
+        Given the numbers of molecules, we generate a list of molecule-types starting at 0. Each molID has its corresponding
+        molecule-type.
+        :param mol_nums:
+        :return chainType_per_mol: np.repeat(np.arange(len(mol_nums)), mol_nums)
+        """
+        chain_types = np.arange(len(mol_nums))
+        return np.repeat(chain_types, mol_nums)
+    
+    @staticmethod
+    def get_chain_types_for_given_chain_ids(chain_ids: np.ndarray,
+                                            chainTypes_for_chainIDs: np.ndarray) -> np.ndarray:
+        """
+        Given the list molIDs, and a list which maps molIDs to their types, we get the molecule-types for each of the molIDs.
+        topoutil_gen_chain_types_per_chain_given_mol_nums() can be used to generate the list of molID-to-type
+        :param chain_ids:
+        :param chainTypes_for_chainIDs:
+        :return chainTypes: chainTypes_for_chainIDs[chain_ids]
+        """
+        return chainTypes_for_chainIDs[chain_ids]
+    
+    @staticmethod
+    def mol_str_to_numpy(mol_str: str) -> np.ndarray:
+        """
+        Given a molecule number string, we generate a numpy array from the string. We take the underscores out and make
+        an array from the numbers.
+        :param mol_str:
+        :return: np.array([int(aNum) for aNum in mol_str.split("_")])
+        """
+        return np.array([int(aNum) for aNum in mol_str.split("_")])
 
 class TrjClusterAnalysis(object):
     """
