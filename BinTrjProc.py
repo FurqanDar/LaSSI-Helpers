@@ -165,6 +165,27 @@ class TrjExtractor(TrjReader):
         """
         return self.extract_frames()[:, :, -1]
     
+class TrjUtils(object):
+    """
+    Utility functions to generate chainIDs for beadIDs, chainTypes for beadIDs and chainIDs, and other molecular information
+    given the numbers of molecules and the sizes of the molecules in a system.
+    """
+
+    @staticmethod
+    def gen_mol_sizes_per_mol_given_nums_and_sizes(mol_nums: np.ndarray, mol_sizes: np.ndarray) -> np.ndarray:
+        """
+        Given the numbers of molecules, and the corresponding sizes of each of the molecules, we generate a list of
+        molecule-sizes for each chain. Gives each molID its molecule-size.
+        :param mol_nums:
+        :param mol_sizes:
+        :return molsize_per_mol: np.repeat(mol_sizes, mol_nums)
+        """
+        assert mol_nums.shape == mol_sizes.shape, "Numbers of molecules, and sizes of the molecules must be of the\
+        same shape!"
+        
+        return np.repeat(mol_sizes, mol_nums)
+    
+
 class TrjClusterAnalysis(object):
     """
     General purpose class intended to be used with extracted frames from LaSSI simulations.
