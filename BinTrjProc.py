@@ -380,7 +380,20 @@ class TrjClusterAnalysis(object):
         
         return sknetwork.topology.connected_components(csr_mat)
     
-    
+    @staticmethod
+    def from_adj_matrices_of_all_frames_gen_cluster_labels(adj_mats_all_frames: np.ndarray) -> np.ndarray:
+        """
+        Given adjacency matrices from multiple frames, we get the cluster labels for each node for each frame. Convenient
+        way to loop over multiple frames.
+        :param adj_mats_all_frames:
+        :return:
+        """
+        n_frames, n_mols, _ = adj_mats_all_frames.shape
+        clus_labs = np.zeros((n_frames, n_mols), int)
+        
+        for frameID, aFrame in enumerate(adj_mats_all_frames):
+            clus_labs[frameID] = TrjClusterAnalysis.from_adj_matrix_of_frame_gen_cluster_labels(aFrame)
+        return clus_labs
     
     
     
