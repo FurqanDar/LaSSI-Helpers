@@ -233,6 +233,25 @@ class TrjClusterAnalysis(object):
         """
         return [TrjClusterAnalysis.from_bonded_pairs_of_beads_get_bonded_pairs_of_mols(aFrame, mol_ids_for_each_bead_id) for aFrame in
                 bonded_beads_all_frames]
+    
+    @staticmethod
+    def from_pairs_of_bonded_mols_gen_adjacency_matrix_given_mol_nums(bonded_mols: np.ndarray,
+                                                                      mol_nums: np.ndarray) -> np.ndarray:
+        """
+        Given the pairs-of-bonded-mols, and the total numbers of molecules, we generate a molecular adjacency matrix.
+        We produce an unweighted adjacency matrix by simply setting the corresponding each-weight from a molecule-pair to 1.
+        :param bonded_mols:
+        :param mol_nums:
+        :return: NxN adjacency matrix where N is the total number of molecules.
+        """
+        tot_mols = mol_nums.sum()
+        adj_mat = np.zeros((tot_mols, tot_mols), int)
+        
+        for i, j in zip(bonded_mols[0], bonded_mols[1]):
+            adj_mat[i, j] = 1
+            adj_mat[j, i] = 1
+        
+        return adj_mat
 
 
 
