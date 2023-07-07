@@ -577,9 +577,24 @@ class TrjClusterAnalysis(object):
         :param weight_comp:
         :return:
         """
-        per_clus_weight = np.sum(weight_comp ** 2., axis=1)
-        weight_mean = np.mean(per_clus_weight)
-        weight_err = np.std(per_clus_weight)
+        per_clus_sqrd_weights_sum = np.sum(weight_comp ** 2., axis=1)
+        weight_mean = np.mean(per_clus_sqrd_weights_sum)
+        weight_err = np.std(per_clus_sqrd_weights_sum)
+        
+        return np.array([weight_mean, weight_err])
+    
+    @staticmethod
+    def calc_mean_clus_squared_total_weight_from_weight_composition(weight_comp: np.ndarray) -> np.ndarray:
+        """
+        Given the weight compositions of clusters, we calculate the total square-weights of each cluster. Here, each
+        of the component weights are added to give a total cluster weight, and then squared per cluster.
+        From this total squared weight, we return the mean and standard error of the mean.
+        :param weight_comp:
+        :return:
+        """
+        per_clus_total_weight_sqrd = np.sum(weight_comp, axis=1) ** 2.
+        weight_mean = np.mean(per_clus_total_weight_sqrd)
+        weight_err = np.std(per_clus_total_weight_sqrd)
         
         return np.array([weight_mean, weight_err])
     
@@ -609,12 +624,29 @@ class TrjClusterAnalysis(object):
         :return:
         """
         
-        clus_weights = np.zeros((len(weight_comp_frames), 2), float)
+        clus_sqrd_weights = np.zeros((len(weight_comp_frames), 2), float)
         
         for frmID, aFrame in enumerate(weight_comp_frames):
-            clus_weights[frmID] = TrjClusterAnalysis.calc_mean_clus_squared_weight_from_weight_composition(aFrame)
+            clus_sqrd_weights[frmID] = TrjClusterAnalysis.calc_mean_clus_squared_weight_from_weight_composition(aFrame)
         
-        return clus_weights
+        return clus_sqrd_weights
+    
+    @staticmethod
+    def calc_mean_clus_total_weight_squared_of_all_frames_from_weight_composition(weight_comp_frames: List[
+        np.ndarray]) -> np.ndarray:
+        """
+        Convenience function to get the cluster means (and standard error of the means) of the squared cluster weights
+        from multiple frames.
+        :param weight_comp_frames:
+        :return:
+        """
+        
+        clus_total_weights_squared = np.zeros((len(weight_comp_frames), 2), float)
+        
+        for frmID, aFrame in enumerate(weight_comp_frames):
+            clus_total_weights_squared[frmID] = TrjClusterAnalysis.calc_mean_clus_squared_weight_from_weight_composition(aFrame)
+        
+        return clus_total_weights_squared
 
 class TrjClusterAnalysis_SameMolSizes(object):
     """
